@@ -1,0 +1,3 @@
+def test_todo_api():
+    response = {"message": "Todo API is working!"}
+    assert response["message"] == "Todo API is working!"
