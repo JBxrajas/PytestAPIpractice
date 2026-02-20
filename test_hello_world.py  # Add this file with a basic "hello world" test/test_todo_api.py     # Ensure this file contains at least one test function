@@ -1,0 +1,7 @@
+def test_hello_world():
+    assert "Hello, World!" == "Hello, World!"
+
+def test_create_todo():
+    todo_item = {"title": "Test Todo", "completed": False}
+    assert todo_item["title"] == "Test Todo"
+    assert todo_item["completed"] is False
