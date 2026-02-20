@@ -1,4 +1,5 @@
 import requests
+from uuid import uuid4
 ENDPOINT = "http://todo.pixegami.io"
 
 def test_get_todo():
@@ -12,7 +13,6 @@ def test_create_task():
     create_task_response= create_task(payload)
     assert create_task_response.status_code == 200
     data = create_task_response.json()
-    print(data)
 
     task_id = data["task"]["task_id"]  # Changed from data["task"][task_id]
     create_task_response = requests.get(ENDPOINT + f"/get-task/{task_id}")
@@ -39,8 +39,6 @@ def test_can_update_task():
     }
 
     update_task_response = update_task(updated_payload)
-    print(f"Update response status: {update_task_response.status_code}")
-    print(f"Update response body: {update_task_response.text}")
     assert update_task_response.status_code == 200
 
     # get and validate the changes
@@ -48,13 +46,27 @@ def test_can_update_task():
     assert get_task_response.status_code == 200
     
     get_task_data = get_task_response.json()
-    print(f"Get task response: {get_task_data}")
-    print(f"Get task response type: {type(get_task_data)}")
     
     # Adjust assertions based on actual response structure
     assert get_task_data["content"] == updated_payload["content"]
     assert get_task_data["is_done"] == updated_payload["is_done"]
 
+def test_can_list_tasks():
+    n = 3
+    payload = new_task_payload()  # Create payload once to get consistent user_id
+    user_id = payload["user_id"]  # Store the user_id
+    
+    for i in range(n):
+        task_payload = new_task_payload()
+        task_payload["user_id"] = user_id  # Use same user_id for all tasks
+        create_task_response = create_task(task_payload)
+        assert create_task_response.status_code == 200
+    
+    list_response = list_tasks(user_id)
+    data = list_response.json()
+    tasks = data["tasks"]
+    assert len(tasks) == n  # Ensure exactly n tasks are returned
+    
 
 def test_can_delete_task():
     # Create a task to delete
@@ -85,8 +97,11 @@ def delete_task(task_id):
     return requests.delete(ENDPOINT + f"/delete-task/{task_id}")
 
 def new_task_payload():
+    user_id = "test_user_" + uuid4().hex # Generate unique user_id
     return {
         "content": "Test Api Task",
-        "user_id": "test_user",
+        "user_id": user_id,  
         "is_done": False
     }
+def list_tasks(user_id):
+    return requests.get(ENDPOINT + "/list-tasks/"+user_id)
